@@ -1,51 +1,61 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset='utf-8' lang='en'/>
-    <title>Offline TierMaker</title>
-    <link rel='stylesheet' href='tiers.css'/>
-    <script src='tiers.js' async></script>
-  </head>
-  <body>
-    <div class='title'>
-        <label class='title-label' for='title-input'>My TierList</label>
-        <input type='text' id='title-input' />
+
+<head>
+  <meta charset='utf-8' lang='en' />
+  <title>Offline TierMaker</title>
+  <link rel='stylesheet' href='tiers.css' />
+
+  <script>window.fetch = undefined;</script>
+  <script src="https://unpkg.com/whatwg-fetch@latest/dist/fetch.umd.js"></script>
+  <script data-pace-options='{ "document": false ,"startOnPageLoad": false, "eventLag": false }'
+    src="https://cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-barber-shop.css">
+
+  <script src='tiers.js' async></script>
+</head>
+
+<body>
+  <div class='title'>
+    <label class='title-label' for='title-input'>My TierList</label>
+    <input type='text' id='title-input' />
+  </div>
+  <a href='https://github.com/MP3Martin/tiers-fork' class='gh-link'>GitHub</a>
+  <section class='main-content'>
+    <div class='tierlist'>
     </div>
-    <a href='https://github.com/silverweed/tiers' class='gh-link'>GitHub</a>
-    <section class='main-content'>
-        <div class='tierlist'>
+    <div class='bottom-container'>
+      <div class='buttons-container'>
+        <div class='button'>
+          <label for='load-img-input'>
+            <img src='plus.png' title='Add images' />
+          </label>
+          <input id='load-img-input' type='file' accept='image/*' multiple />
         </div>
-        <div class='bottom-container'>
-            <div class='buttons-container'>
-                <div class='button'>
-                    <label for='load-img-input'>
-                        <img src='plus.png' title='Add images'/>
-                    </label>
-                    <input id='load-img-input' type='file' accept='image/*' multiple/>
-                </div>
-                <div class='button'>
-                    <label for='reset-list-input'>
-                        <img src='reset.png' title='Reset list'>
-                    </label>
-                    <input id='reset-list-input' type='button' />
-                </div>
-                <div class='button'>
-                    <label for='export-input'>
-                        <img src='export.png' title='Export'>
-                    </label>
-                    <input id='export-input' type='button' />
-                </div>
-                <div class='button'>
-                    <label for='import-input'>
-                        <img src='import.png' title='Import'/>
-                    </label>
-                    <input id='import-input' type='file' accept='.json' multiple/>
-                </div>
-            </div>
-            <p class='hint'>Hint: you can paste an image into this page to have it show up in the list below.</p>
-            <section class='images'></section>
+        <div class='button'>
+          <label for='reset-list-input'>
+            <img src='reset.png' title='Reset list'>
+          </label>
+          <input id='reset-list-input' type='button' />
         </div>
-    </section>
-    <img id='trash' src='trash_bin.png' title='Delete image (drag it over here)'></img>
-  </body>
+        <div class='button'>
+          <label for='export-input'>
+            <img src='export.png' title='Export'>
+          </label>
+          <input id='export-input' type='button' />
+        </div>
+        <div class='button'>
+          <label for='import-input'>
+            <img src='import.png' title='Import' />
+          </label>
+          <input id='import-input' type='file' accept='.json' multiple />
+        </div>
+      </div>
+      <p class='hint'>Hint: you can paste an image into this page to have it show up in the list below.</p>
+      <section class='images'></section>
+    </div>
+  </section>
+  <img id='trash' src='trash_bin.png' title='Delete image (drag it over here)'></img>
+</body>
+
 </html>
