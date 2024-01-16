@@ -145,12 +145,12 @@ window.addEventListener('load', () => ELW(() => {
 
   bind_title_events();
 
-  document.getElementById('load-img-input').addEventListener('input', () => ELW((evt) => {
+  document.getElementById('load-img-input').addEventListener('input', (evt) => ELW(() => {
     // @Speed: maybe we can do some async stuff to optimize this
     const images = document.querySelector('.images');
     for (const file of evt.target.files) {
       const reader = new window.FileReader();
-      reader.addEventListener('load', () => ELW((load_evt) => {
+      reader.addEventListener('load', (load_evt) => ELW(() => {
         const img = create_img_with_src(load_evt.target.result);
         images.appendChild(img);
         unsaved_changes = true;
@@ -191,13 +191,13 @@ window.addEventListener('load', () => ELW(() => {
     }
   }));
 
-  document.getElementById('import-input').addEventListener('input', () => ELW((evt) => {
+  document.getElementById('import-input').addEventListener('input', (evt) => ELW(() => {
     if (!evt.target.files) {
       return;
     }
     const file = evt.target.files[0];
     const reader = new window.FileReader();
-    reader.addEventListener('load', () => ELW((load_evt) => {
+    reader.addEventListener('load', (load_evt) => ELW(() => {
       const raw = load_evt.target.result;
       const parsed = JSON.parse(raw);
       if (!parsed) {
@@ -212,7 +212,7 @@ window.addEventListener('load', () => ELW(() => {
 
   bind_trash_events();
 
-  window.addEventListener('beforeunload', () => ELW((evt) => {
+  window.addEventListener('beforeunload', (evt) => ELW(() => {
     if (!unsaved_changes) return null;
     const msg = 'You have unsaved changes. Leave anyway?';
     (evt || window.event).returnValue = msg;
@@ -229,7 +229,7 @@ function create_img_with_src (src) {
   img.classList.add('draggable');
   img.draggable = true;
   img.ondragstart = "event.dataTransfer.setData('text/plain', null)";
-  img.addEventListener('mousedown', () => ELW((evt) => {
+  img.addEventListener('mousedown', (evt) => ELW(() => {
     dragged_image = evt.target;
     dragged_image.classList.add('dragged');
   }));
@@ -312,22 +312,22 @@ function end_drag (evt) {
   dragged_image = null;
 }
 
-window.addEventListener('mouseup', () => { ELW(end_drag.call()); });
-window.addEventListener('dragend', () => { ELW(end_drag.call()); });
+window.addEventListener('mouseup', () => { ELW(end_drag); });
+window.addEventListener('dragend', () => { ELW(end_drag); });
 
 function make_accept_drop (elem) {
   elem.classList.add('droppable');
 
-  elem.addEventListener('dragenter', () => ELW((evt) => {
+  elem.addEventListener('dragenter', (evt) => ELW(() => {
     evt.target.classList.add('drag-entered');
   }));
-  elem.addEventListener('dragleave', () => ELW((evt) => {
+  elem.addEventListener('dragleave', (evt) => ELW(() => {
     evt.target.classList.remove('drag-entered');
   }));
-  elem.addEventListener('dragover', () => ELW((evt) => {
+  elem.addEventListener('dragover', (evt) => ELW(() => {
     evt.preventDefault();
   }));
-  elem.addEventListener('drop', () => ELW((evt) => {
+  elem.addEventListener('drop', (evt) => ELW(() => {
     evt.preventDefault();
     evt.target.classList.remove('drag-entered');
 
@@ -369,7 +369,7 @@ function enable_edit_on_click (container, input, label) {
   input.addEventListener('change', () => { ELW(change_label.call()); });
   input.addEventListener('focusout', () => { ELW(change_label.call()); });
 
-  container.addEventListener('click', () => ELW((evt) => {
+  container.addEventListener('click', (evt) => ELW(() => {
     label.style.display = 'none';
     input.value = label.innerText.substr(0, MAX_NAME_LEN);
     input.style.display = 'inline';
@@ -430,7 +430,7 @@ function add_row (index, name) {
   btn_plus_up.type = 'button';
   btn_plus_up.value = '+';
   btn_plus_up.title = 'Add row above';
-  btn_plus_up.addEventListener('click', () => ELW((evt) => {
+  btn_plus_up.addEventListener('click', (evt) => ELW(() => {
     const parent_div = evt.target.parentNode.parentNode;
     const rows = Array.from(tierlist_div.children);
     const idx = rows.indexOf(parent_div);
@@ -442,7 +442,7 @@ function add_row (index, name) {
   btn_rm.type = 'button';
   btn_rm.value = '-';
   btn_rm.title = 'Remove row';
-  btn_rm.addEventListener('click', () => ELW((evt) => {
+  btn_rm.addEventListener('click', (evt) => ELW(() => {
     const rows = Array.from(tierlist_div.querySelectorAll('.row'));
     if (rows.length < 2) return;
     const parent_div = evt.target.parentNode.parentNode;
@@ -458,7 +458,7 @@ function add_row (index, name) {
   btn_plus_down.type = 'button';
   btn_plus_down.value = '+';
   btn_plus_down.title = 'Add row below';
-  btn_plus_down.addEventListener('click', () => ELW((evt) => {
+  btn_plus_down.addEventListener('click', (evt) => ELW(() => {
     const parent_div = evt.target.parentNode.parentNode;
     const rows = Array.from(tierlist_div.children);
     const idx = rows.indexOf(parent_div);
@@ -501,18 +501,18 @@ function recompute_header_colors () {
 function bind_trash_events () {
   const trash = document.getElementById('trash');
   trash.classList.add('droppable');
-  trash.addEventListener('dragenter', () => ELW((evt) => {
+  trash.addEventListener('dragenter', (evt) => ELW(() => {
     evt.preventDefault();
     evt.target.src = 'trash_bin_open.png';
   }));
-  trash.addEventListener('dragexit', () => ELW((evt) => {
+  trash.addEventListener('dragexit', (evt) => ELW(() => {
     evt.preventDefault();
     evt.target.src = 'trash_bin.png';
   }));
-  trash.addEventListener('dragover', () => ELW((evt) => {
+  trash.addEventListener('dragover', (evt) => ELW(() => {
     evt.preventDefault();
   }));
-  trash.addEventListener('drop', () => ELW((evt) => {
+  trash.addEventListener('drop', (evt) => ELW(() => {
     evt.preventDefault();
     evt.target.src = 'trash_bin.png';
     if (dragged_image) {
