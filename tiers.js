@@ -81,7 +81,7 @@ function isURL (str) {
   }
 }
 
-async function loadJSONfromURL () {
+async function loadJSONconfigFromURL () {
   const loadFromURL = getQuery('url');
   if (loadFromURL !== null && isURL(loadFromURL)) {
     try {
@@ -89,11 +89,48 @@ async function loadJSONfromURL () {
       result = await result.json();
       hard_reset_list();
       load_tierlist(result);
-    } catch (e) { console.warn(e); }
+    } catch (e) { console.error(e); }
   }
 }
 
-window.addEventListener('load', () => {
+// function disableEventListeners (element) {
+//   const old_element = element;
+//   const new_element = old_element.cloneNode(true);
+//   old_element.parentNode.replaceChild(new_element, old_element);
+// }
+
+/**
+ * **E**vent **L**istener **W**rapper
+ */
+function ELW (func) {
+  if (!disableEvents) {
+    func.call();
+  }
+}
+
+let disableEvents = false;
+
+function handleDisableEvents () {
+  if (!disableEvents) return;
+  try {
+    Array.from(document.getElementsByClassName('row-buttons')).forEach(i => { i.remove(); });
+    document.getElementById('trash').remove();
+    document.getElementsByClassName('bottom-container')[0].remove();
+  } catch (e) { }
+  document.getElementsByClassName('tierlist')[0].style.width = '96%';
+  Array.from(document.querySelectorAll('.item>.draggable')).forEach(i => { i.style.cursor = 'auto'; });
+}
+
+function handleQueryParameters () {
+  loadJSONconfigFromURL();
+  const lock = getQuery('lock');
+  if (lock === 'true' || lock === '1') {
+    disableEvents = true;
+    handleDisableEvents();
+  }
+}
+
+window.addEventListener('load', () => ELW(() => {
   untiered_images = document.querySelector('.images');
   tierlist_div = document.querySelector('.tierlist');
 
@@ -108,19 +145,19 @@ window.addEventListener('load', () => {
 
   bind_title_events();
 
-  document.getElementById('load-img-input').addEventListener('input', (evt) => {
+  document.getElementById('load-img-input').addEventListener('input', () => ELW((evt) => {
     // @Speed: maybe we can do some async stuff to optimize this
     const images = document.querySelector('.images');
     for (const file of evt.target.files) {
       const reader = new window.FileReader();
-      reader.addEventListener('load', (load_evt) => {
+      reader.addEventListener('load', () => ELW((load_evt) => {
         const img = create_img_with_src(load_evt.target.result);
         images.appendChild(img);
         unsaved_changes = true;
-      });
+      }));
       reader.readAsDataURL(file);
     }
-  });
+  }));
 
   // Allow copy-pasting image from clipboard
   document.onpaste = (evt) => {
@@ -141,26 +178,26 @@ window.addEventListener('load', () => {
     }
   };
 
-  document.getElementById('reset-list-input').addEventListener('click', () => {
+  document.getElementById('reset-list-input').addEventListener('click', () => ELW(() => {
     if (window.confirm('Reset Tierlist? (this will place all images back in the pool)')) {
       soft_reset_list();
     }
-  });
+  }));
 
-  document.getElementById('export-input').addEventListener('click', () => {
+  document.getElementById('export-input').addEventListener('click', () => ELW(() => {
     const name = window.prompt('Please give a name to this tierlist');
     if (name) {
       save_tierlist(`${name}.json`);
     }
-  });
+  }));
 
-  document.getElementById('import-input').addEventListener('input', (evt) => {
+  document.getElementById('import-input').addEventListener('input', () => ELW((evt) => {
     if (!evt.target.files) {
       return;
     }
     const file = evt.target.files[0];
     const reader = new window.FileReader();
-    reader.addEventListener('load', (load_evt) => {
+    reader.addEventListener('load', () => ELW((load_evt) => {
       const raw = load_evt.target.result;
       const parsed = JSON.parse(raw);
       if (!parsed) {
@@ -169,21 +206,21 @@ window.addEventListener('load', () => {
       }
       hard_reset_list();
       load_tierlist(parsed);
-    });
+    }));
     reader.readAsText(file);
-  });
+  }));
 
   bind_trash_events();
 
-  window.addEventListener('beforeunload', (evt) => {
+  window.addEventListener('beforeunload', () => ELW((evt) => {
     if (!unsaved_changes) return null;
     const msg = 'You have unsaved changes. Leave anyway?';
     (evt || window.event).returnValue = msg;
     return msg;
-  });
+  }));
 
-  loadJSONfromURL();
-});
+  handleQueryParameters();
+}));
 
 function create_img_with_src (src) {
   const img = document.createElement('img');
@@ -192,10 +229,10 @@ function create_img_with_src (src) {
   img.classList.add('draggable');
   img.draggable = true;
   img.ondragstart = "event.dataTransfer.setData('text/plain', null)";
-  img.addEventListener('mousedown', (evt) => {
+  img.addEventListener('mousedown', () => ELW((evt) => {
     dragged_image = evt.target;
     dragged_image.classList.add('dragged');
-  });
+  }));
   return img;
 }
 
@@ -267,6 +304,7 @@ function load_tierlist (serialized_tierlist) {
   resize_headers();
 
   unsaved_changes = false;
+  handleDisableEvents();
 }
 
 function end_drag (evt) {
@@ -274,22 +312,22 @@ function end_drag (evt) {
   dragged_image = null;
 }
 
-window.addEventListener('mouseup', end_drag);
-window.addEventListener('dragend', end_drag);
+window.addEventListener('mouseup', () => { ELW(end_drag.call()); });
+window.addEventListener('dragend', () => { ELW(end_drag.call()); });
 
 function make_accept_drop (elem) {
   elem.classList.add('droppable');
 
-  elem.addEventListener('dragenter', (evt) => {
+  elem.addEventListener('dragenter', () => ELW((evt) => {
     evt.target.classList.add('drag-entered');
-  });
-  elem.addEventListener('dragleave', (evt) => {
+  }));
+  elem.addEventListener('dragleave', () => ELW((evt) => {
     evt.target.classList.remove('drag-entered');
-  });
-  elem.addEventListener('dragover', (evt) => {
+  }));
+  elem.addEventListener('dragover', () => ELW((evt) => {
     evt.preventDefault();
-  });
-  elem.addEventListener('drop', (evt) => {
+  }));
+  elem.addEventListener('drop', () => ELW((evt) => {
     evt.preventDefault();
     evt.target.classList.remove('drag-entered');
 
@@ -317,7 +355,7 @@ function make_accept_drop (elem) {
     items_container.appendChild(td);
 
     unsaved_changes = true;
-  });
+  }));
 }
 
 function enable_edit_on_click (container, input, label) {
@@ -328,15 +366,15 @@ function enable_edit_on_click (container, input, label) {
     unsaved_changes = true;
   }
 
-  input.addEventListener('change', change_label);
-  input.addEventListener('focusout', change_label);
+  input.addEventListener('change', () => { ELW(change_label.call()); });
+  input.addEventListener('focusout', () => { ELW(change_label.call()); });
 
-  container.addEventListener('click', (evt) => {
+  container.addEventListener('click', () => ELW((evt) => {
     label.style.display = 'none';
     input.value = label.innerText.substr(0, MAX_NAME_LEN);
     input.style.display = 'inline';
     input.select();
-  });
+  }));
 }
 
 function bind_title_events () {
@@ -351,7 +389,7 @@ function create_label_input (row, row_idx, row_name) {
   const input = document.createElement('input');
   input.id = `input-tier-${unique_id++}`;
   input.type = 'text';
-  input.addEventListener('change', resize_headers);
+  input.addEventListener('change', () => { ELW(resize_headers.call()); });
   const label = document.createElement('label');
   label.htmlFor = input.id;
   label.innerText = row_name;
@@ -392,19 +430,19 @@ function add_row (index, name) {
   btn_plus_up.type = 'button';
   btn_plus_up.value = '+';
   btn_plus_up.title = 'Add row above';
-  btn_plus_up.addEventListener('click', (evt) => {
+  btn_plus_up.addEventListener('click', () => ELW((evt) => {
     const parent_div = evt.target.parentNode.parentNode;
     const rows = Array.from(tierlist_div.children);
     const idx = rows.indexOf(parent_div);
     console.assert(idx >= 0);
     add_row(idx, '');
     recompute_header_colors();
-  });
+  }));
   const btn_rm = document.createElement('input');
   btn_rm.type = 'button';
   btn_rm.value = '-';
   btn_rm.title = 'Remove row';
-  btn_rm.addEventListener('click', (evt) => {
+  btn_rm.addEventListener('click', () => ELW((evt) => {
     const rows = Array.from(tierlist_div.querySelectorAll('.row'));
     if (rows.length < 2) return;
     const parent_div = evt.target.parentNode.parentNode;
@@ -415,19 +453,19 @@ function add_row (index, name) {
       rm_row(idx);
     }
     recompute_header_colors();
-  });
+  }));
   const btn_plus_down = document.createElement('input');
   btn_plus_down.type = 'button';
   btn_plus_down.value = '+';
   btn_plus_down.title = 'Add row below';
-  btn_plus_down.addEventListener('click', (evt) => {
+  btn_plus_down.addEventListener('click', () => ELW((evt) => {
     const parent_div = evt.target.parentNode.parentNode;
     const rows = Array.from(tierlist_div.children);
     const idx = rows.indexOf(parent_div);
     console.assert(idx >= 0);
     add_row(idx + 1, name);
     recompute_header_colors();
-  });
+  }));
   row_buttons.appendChild(btn_plus_up);
   row_buttons.appendChild(btn_rm);
   row_buttons.appendChild(btn_plus_down);
@@ -463,18 +501,18 @@ function recompute_header_colors () {
 function bind_trash_events () {
   const trash = document.getElementById('trash');
   trash.classList.add('droppable');
-  trash.addEventListener('dragenter', (evt) => {
+  trash.addEventListener('dragenter', () => ELW((evt) => {
     evt.preventDefault();
     evt.target.src = 'trash_bin_open.png';
-  });
-  trash.addEventListener('dragexit', (evt) => {
+  }));
+  trash.addEventListener('dragexit', () => ELW((evt) => {
     evt.preventDefault();
     evt.target.src = 'trash_bin.png';
-  });
-  trash.addEventListener('dragover', (evt) => {
+  }));
+  trash.addEventListener('dragover', () => ELW((evt) => {
     evt.preventDefault();
-  });
-  trash.addEventListener('drop', (evt) => {
+  }));
+  trash.addEventListener('drop', () => ELW((evt) => {
     evt.preventDefault();
     evt.target.src = 'trash_bin.png';
     if (dragged_image) {
@@ -487,5 +525,5 @@ function bind_trash_events () {
       }
       dragged_image.remove();
     }
-  });
+  }));
 }
