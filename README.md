@@ -6,4 +6,4 @@ This is a fork of [<img src="https://github.com/MP3Martin/tiers-fork/assets/6050
  - `lock` parameter (makes the page readonly, for display)
 
 ### Examples:
- - https://mp3martin.github.io/tiers/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fmp3martin%2Fpublic-assets%40a77f7ee%2Ftierlists%2Ftest1.json&lock=1
+ - https://mp3martin.github.io/tiers-fork/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fmp3martin%2Fpublic-assets%40a77f7ee%2Ftierlists%2Ftest1.json&lock=1
