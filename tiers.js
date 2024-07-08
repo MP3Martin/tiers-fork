@@ -370,8 +370,8 @@ function enable_edit_on_click (container, input, label) {
         unsaved_changes = true;
     }
 
-    input.addEventListener('change', () => { ELW(change_label.call()); });
-    input.addEventListener('focusout', () => { ELW(change_label.call()); });
+    input.addEventListener('change', () => { ELW(change_label); });
+    input.addEventListener('focusout', () => { ELW(change_label); });
 
     container.addEventListener('click', (evt) => ELW(() => {
         label.style.display = 'none';
@@ -393,7 +393,7 @@ function create_label_input (row, row_idx, row_name) {
     const input = document.createElement('input');
     input.id = `input-tier-${unique_id++}`;
     input.type = 'text';
-    input.addEventListener('change', () => { ELW(resize_headers.call()); });
+    input.addEventListener('change', () => { ELW(resize_headers); });
     const label = document.createElement('label');
     label.htmlFor = input.id;
     label.innerText = row_name;
