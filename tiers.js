@@ -20,14 +20,14 @@
 const MAX_NAME_LEN = 200;
 const DEFAULT_TIERS = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
 const TIER_COLORS = [
-  // from S to F
-  '#ff6666',
-  '#f0a731',
-  '#f4d95b',
-  '#66ff66',
-  '#58c8f4',
-  '#5b76f4',
-  '#f45bed'
+    // from S to F
+    '#ff6666',
+    '#f0a731',
+    '#f4d95b',
+    '#66ff66',
+    '#58c8f4',
+    '#5b76f4',
+    '#f45bed'
 ];
 
 let unique_id = 0;
@@ -44,487 +44,489 @@ let tierlist_div;
 let dragged_image;
 
 function reset_row (row) {
-  row.querySelectorAll('span.item').forEach((item) => {
-    for (let i = 0; i < item.children.length; ++i) {
-      const img = item.children[i];
-      item.removeChild(img);
-      untiered_images.appendChild(img);
-    }
-    item.parentNode.removeChild(item);
-  });
+    row.querySelectorAll('span.item').forEach((item) => {
+        for (let i = 0; i < item.children.length; ++i) {
+            const img = item.children[i];
+            item.removeChild(img);
+            untiered_images.appendChild(img);
+        }
+        item.parentNode.removeChild(item);
+    });
 }
 
 // Removes all rows from the tierlist, alongside their content.
 // Also empties the untiered images.
 function hard_reset_list () {
-  tierlist_div.innerHTML = '';
-  untiered_images.innerHTML = '';
+    tierlist_div.innerHTML = '';
+    untiered_images.innerHTML = '';
 }
 
 // Places back all the tierlist content into the untiered pool.
 function soft_reset_list () {
-  tierlist_div.querySelectorAll('.row').forEach(reset_row);
-  unsaved_changes = true;
+    tierlist_div.querySelectorAll('.row').forEach(reset_row);
+    unsaved_changes = true;
 }
 
 function getQuery (query) {
-  return new URLSearchParams(window.location.search).get(query);
+    return new URLSearchParams(window.location.search).get(query);
 }
 
 function isURL (str) {
-  try {
-    /* eslint-disable-next-line no-new */
-    new URL(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-async function loadJSONconfigFromURL () {
-  const loadFromURL = getQuery('url');
-  if (loadFromURL !== null && isURL(loadFromURL)) {
     try {
-      let result = await fetch(loadFromURL);
-      result = await result.json();
-      hard_reset_list();
-      load_tierlist(result);
-    } catch (e) { console.error(e); }
-  }
+        /* eslint-disable-next-line no-new */
+        new URL(str);
+        return true;
+    } catch (e) {
+        return false;
+    }
 }
 
-// function disableEventListeners (element) {
-//   const old_element = element;
-//   const new_element = old_element.cloneNode(true);
-//   old_element.parentNode.replaceChild(new_element, old_element);
-// }
+async function loadJSONConfigFromURL () {
+    const loadFromURL = getQuery('url');
+    if (loadFromURL !== null && isURL(loadFromURL)) {
+        try {
+            let result = await fetch(loadFromURL);
+            result = await result.json();
+            hard_reset_list();
+            load_tierlist(result);
+        } catch (e) { console.error(e); }
+    }
+}
 
 /**
  * **E**vent **L**istener **W**rapper
  */
 function ELW (func) {
-  if (!disableEvents) {
-    func.call();
-  }
+    if (!disableEvents) {
+        func.call();
+    }
 }
 
 let disableEvents = false;
 
 function handleDisableEvents () {
-  if (!disableEvents) return;
-  try {
-    Array.from(document.getElementsByClassName('row-buttons')).forEach(i => { i.remove(); });
-    document.getElementById('trash').remove();
-    document.getElementsByClassName('bottom-container')[0].remove();
-    document.getElementById('bottom-hint').remove();
-  } catch (e) { }
-  document.getElementsByClassName('tierlist')[0].style.width = '96%';
-  Array.from(document.querySelectorAll('.item>.draggable')).forEach(i => { i.style.cursor = 'auto'; });
+    if (!disableEvents) return;
+    try {
+        Array.from(document.getElementsByClassName('row-buttons')).forEach(i => { i.remove(); });
+        document.getElementById('trash').remove();
+        document.getElementsByClassName('bottom-container')[0].remove();
+        document.getElementById('bottom-hint').remove();
+    } catch (e) { }
+    document.getElementsByClassName('tierlist')[0].style.width = '96%';
+    Array.from(document.querySelectorAll('.item>.draggable')).forEach(i => { i.style.cursor = 'auto'; });
 }
 
 function handleQueryParameters () {
-  loadJSONconfigFromURL();
-  const lock = getQuery('lock');
-  if (lock === 'true' || lock === '1') {
-    disableEvents = true;
-    handleDisableEvents();
-  }
+    loadJSONConfigFromURL();
+
+    // Handle lock
+    const lock = getQuery('lock');
+    if (lock === 'true' || lock === '1') {
+        disableEvents = true;
+        handleDisableEvents();
+    }
+
+    // Handle note
+    const note = getQuery('note');
+    if (note !== null) {
+        const titleNote = document.getElementsByClassName('title-note')[0];
+        titleNote.classList.add('title-note-visible');
+        titleNote.innerText = note;
+    }
 }
 
 window.addEventListener('load', () => ELW(() => {
-  untiered_images = document.querySelector('.images');
-  tierlist_div = document.querySelector('.tierlist');
+    untiered_images = document.querySelector('.images');
+    tierlist_div = document.querySelector('.tierlist');
 
-  for (let i = 0; i < DEFAULT_TIERS.length; ++i) {
-    add_row(i, DEFAULT_TIERS[i]);
-  }
-  recompute_header_colors();
-
-  headers_orig_min_width = all_headers[0][0].clientWidth;
-
-  make_accept_drop(document.querySelector('.images'));
-
-  bind_title_events();
-
-  document.getElementById('load-img-input').addEventListener('input', (evt) => ELW(() => {
-    // @Speed: maybe we can do some async stuff to optimize this
-    const images = document.querySelector('.images');
-    for (const file of evt.target.files) {
-      const reader = new window.FileReader();
-      reader.addEventListener('load', (load_evt) => ELW(() => {
-        const img = create_img_with_src(load_evt.target.result);
-        images.appendChild(img);
-        unsaved_changes = true;
-      }));
-      reader.readAsDataURL(file);
+    for (let i = 0; i < DEFAULT_TIERS.length; ++i) {
+        add_row(i, DEFAULT_TIERS[i]);
     }
-  }));
+    recompute_header_colors();
 
-  // Allow copy-pasting image from clipboard
-  document.onpaste = (evt) => {
-    const clip_data = evt.clipboardData || evt.originalEvent.clipboardData;
-    const items = clip_data.items;
-    const images = document.querySelector('.images');
-    for (const item of items) {
-      if (item.kind === 'file') {
-        const blob = item.getAsFile();
-        const reader = new window.FileReader();
-        reader.onload = (load_evt) => {
-          const img = create_img_with_src(load_evt.target.result);
-          images.appendChild(img);
-          unsaved_changes = true;
-        };
-        reader.readAsDataURL(blob);
-      }
-    }
-  };
+    headers_orig_min_width = all_headers[0][0].clientWidth;
 
-  document.getElementById('reset-list-input').addEventListener('click', () => ELW(() => {
-    if (window.confirm('Reset Tierlist? (this will place all images back in the pool)')) {
-      soft_reset_list();
-    }
-  }));
+    make_accept_drop(document.querySelector('.images'));
 
-  document.getElementById('export-input').addEventListener('click', () => ELW(() => {
-    const name = window.prompt('Please give a name to this tierlist');
-    if (name) {
-      save_tierlist(`${name}.json`);
-    }
-  }));
+    bind_title_events();
 
-  document.getElementById('import-input').addEventListener('input', (evt) => ELW(() => {
-    if (!evt.target.files) {
-      return;
-    }
-    const file = evt.target.files[0];
-    const reader = new window.FileReader();
-    reader.addEventListener('load', (load_evt) => ELW(() => {
-      const raw = load_evt.target.result;
-      const parsed = JSON.parse(raw);
-      if (!parsed) {
-        window.alert('Failed to parse data');
-        return;
-      }
-      hard_reset_list();
-      load_tierlist(parsed);
+    document.getElementById('load-img-input').addEventListener('input', (evt) => ELW(() => {
+        // @Speed: maybe we can do some async stuff to optimize this
+        const images = document.querySelector('.images');
+        for (const file of evt.target.files) {
+            const reader = new window.FileReader();
+            reader.addEventListener('load', (load_evt) => ELW(() => {
+                const img = create_img_with_src(load_evt.target.result);
+                images.appendChild(img);
+                unsaved_changes = true;
+            }));
+            reader.readAsDataURL(file);
+        }
     }));
-    reader.readAsText(file);
-  }));
 
-  bind_trash_events();
+    // Allow copy-pasting image from clipboard
+    document.onpaste = (evt) => {
+        const clip_data = evt.clipboardData || evt.originalEvent.clipboardData;
+        const items = clip_data.items;
+        const images = document.querySelector('.images');
+        for (const item of items) {
+            if (item.kind === 'file') {
+                const blob = item.getAsFile();
+                const reader = new window.FileReader();
+                reader.onload = (load_evt) => {
+                    const img = create_img_with_src(load_evt.target.result);
+                    images.appendChild(img);
+                    unsaved_changes = true;
+                };
+                reader.readAsDataURL(blob);
+            }
+        }
+    };
 
-  window.addEventListener('beforeunload', (evt) => ELW(() => {
-    if (!unsaved_changes) return null;
-    const msg = 'You have unsaved changes. Leave anyway?';
-    (evt || window.event).returnValue = msg;
-    return msg;
-  }));
+    document.getElementById('reset-list-input').addEventListener('click', () => ELW(() => {
+        if (window.confirm('Reset Tierlist? (this will place all images back in the pool)')) {
+            soft_reset_list();
+        }
+    }));
 
-  handleQueryParameters();
+    document.getElementById('export-input').addEventListener('click', () => ELW(() => {
+        const name = window.prompt('Please give a name to this tierlist');
+        if (name) {
+            save_tierlist(`${name}.json`);
+        }
+    }));
+
+    document.getElementById('import-input').addEventListener('input', (evt) => ELW(() => {
+        if (!evt.target.files) {
+            return;
+        }
+        const file = evt.target.files[0];
+        const reader = new window.FileReader();
+        reader.addEventListener('load', (load_evt) => ELW(() => {
+            const raw = load_evt.target.result;
+            const parsed = JSON.parse(raw);
+            if (!parsed) {
+                window.alert('Failed to parse data');
+                return;
+            }
+            hard_reset_list();
+            load_tierlist(parsed);
+        }));
+        reader.readAsText(file);
+    }));
+
+    bind_trash_events();
+
+    window.addEventListener('beforeunload', (evt) => ELW(() => {
+        if (!unsaved_changes) return null;
+        const msg = 'You have unsaved changes. Leave anyway?';
+        (evt || window.event).returnValue = msg;
+        return msg;
+    }));
+
+    handleQueryParameters();
 }));
 
 function create_img_with_src (src) {
-  const img = document.createElement('img');
-  img.src = src;
-  img.style.userSelect = 'none';
-  img.classList.add('draggable');
-  img.draggable = true;
-  img.ondragstart = "event.dataTransfer.setData('text/plain', null)";
-  img.addEventListener('mousedown', (evt) => ELW(() => {
-    dragged_image = evt.target;
-    dragged_image.classList.add('dragged');
-  }));
-  return img;
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.userSelect = 'none';
+    img.classList.add('draggable');
+    img.draggable = true;
+    img.ondragstart = 'event.dataTransfer.setData(\'text/plain\', null)';
+    img.addEventListener('mousedown', (evt) => ELW(() => {
+        dragged_image = evt.target;
+        dragged_image.classList.add('dragged');
+    }));
+    return img;
 }
 
 function save (filename, text) {
-  unsaved_changes = false;
+    unsaved_changes = false;
 
-  const el = document.createElement('a');
-  el.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(text));
-  el.setAttribute('download', filename);
-  el.style.display = 'none';
-  document.body.appendChild(el);
-  el.click();
-  document.body.removeChild(el);
+    const el = document.createElement('a');
+    el.setAttribute('href', 'data:text/html;charset=utf-8,' + encodeURIComponent(text));
+    el.setAttribute('download', filename);
+    el.style.display = 'none';
+    document.body.appendChild(el);
+    el.click();
+    document.body.removeChild(el);
 }
 
 function save_tierlist (filename) {
-  const serialized_tierlist = {
-    title: document.querySelector('.title-label').innerText,
-    rows: []
-  };
-  tierlist_div.querySelectorAll('.row').forEach((row, i) => {
-    serialized_tierlist.rows.push({
-      name: row.querySelector('.header label').innerText.substr(0, MAX_NAME_LEN)
+    const serialized_tierlist = {
+        title: document.querySelector('.title-label').innerText,
+        rows: []
+    };
+    tierlist_div.querySelectorAll('.row').forEach((row, i) => {
+        serialized_tierlist.rows.push({
+            name: row.querySelector('.header label').innerText.substr(0, MAX_NAME_LEN)
+        });
+        serialized_tierlist.rows[i].imgs = [];
+        row.querySelectorAll('img').forEach((img) => {
+            serialized_tierlist.rows[i].imgs.push(img.src);
+        });
     });
-    serialized_tierlist.rows[i].imgs = [];
-    row.querySelectorAll('img').forEach((img) => {
-      serialized_tierlist.rows[i].imgs.push(img.src);
-    });
-  });
 
-  const untiered_imgs = document.querySelectorAll('.images img');
-  if (untiered_imgs.length > 0) {
-    serialized_tierlist.untiered = [];
-    untiered_imgs.forEach((img) => {
-      serialized_tierlist.untiered.push(img.src);
-    });
-  }
+    const untiered_imgs = document.querySelectorAll('.images img');
+    if (untiered_imgs.length > 0) {
+        serialized_tierlist.untiered = [];
+        untiered_imgs.forEach((img) => {
+            serialized_tierlist.untiered.push(img.src);
+        });
+    }
 
-  save(filename, JSON.stringify(serialized_tierlist));
+    save(filename, JSON.stringify(serialized_tierlist));
 }
 
 function load_tierlist (serialized_tierlist) {
-  document.querySelector('.title-label').innerText = serialized_tierlist.title;
-  for (const idx in serialized_tierlist.rows) {
-    const ser_row = serialized_tierlist.rows[idx];
-    const elem = add_row(idx, ser_row.name);
+    document.querySelector('.title-label').innerText = serialized_tierlist.title;
+    for (const idx in serialized_tierlist.rows) {
+        const ser_row = serialized_tierlist.rows[idx];
+        const elem = add_row(idx, ser_row.name);
 
-    for (const img_src of ser_row.imgs ?? []) {
-      const img = create_img_with_src(img_src);
-      const td = document.createElement('span');
-      td.classList.add('item');
-      td.appendChild(img);
-      const items_container = elem.querySelector('.items');
-      items_container.appendChild(td);
+        for (const img_src of ser_row.imgs ?? []) {
+            const img = create_img_with_src(img_src);
+            const td = document.createElement('span');
+            td.classList.add('item');
+            td.appendChild(img);
+            const items_container = elem.querySelector('.items');
+            items_container.appendChild(td);
+        }
+
+        elem.querySelector('label').innerText = ser_row.name;
+    }
+    recompute_header_colors();
+
+    if (serialized_tierlist.untiered) {
+        const images = document.querySelector('.images');
+        for (const img_src of serialized_tierlist.untiered) {
+            const img = create_img_with_src(img_src);
+            images.appendChild(img);
+        }
     }
 
-    elem.querySelector('label').innerText = ser_row.name;
-  }
-  recompute_header_colors();
+    resize_headers();
 
-  if (serialized_tierlist.untiered) {
-    const images = document.querySelector('.images');
-    for (const img_src of serialized_tierlist.untiered) {
-      const img = create_img_with_src(img_src);
-      images.appendChild(img);
-    }
-  }
-
-  resize_headers();
-
-  unsaved_changes = false;
-  handleDisableEvents();
+    unsaved_changes = false;
+    handleDisableEvents();
 }
 
 function end_drag (evt) {
-  dragged_image?.classList.remove('dragged');
-  dragged_image = null;
+    dragged_image?.classList.remove('dragged');
+    dragged_image = null;
 }
 
 window.addEventListener('mouseup', () => { ELW(end_drag); });
 window.addEventListener('dragend', () => { ELW(end_drag); });
 
 function make_accept_drop (elem) {
-  elem.classList.add('droppable');
+    elem.classList.add('droppable');
 
-  elem.addEventListener('dragenter', (evt) => ELW(() => {
-    evt.target.classList.add('drag-entered');
-  }));
-  elem.addEventListener('dragleave', (evt) => ELW(() => {
-    evt.target.classList.remove('drag-entered');
-  }));
-  elem.addEventListener('dragover', (evt) => ELW(() => {
-    evt.preventDefault();
-  }));
-  elem.addEventListener('drop', (evt) => ELW(() => {
-    evt.preventDefault();
-    evt.target.classList.remove('drag-entered');
+    elem.addEventListener('dragenter', (evt) => ELW(() => {
+        evt.target.classList.add('drag-entered');
+    }));
+    elem.addEventListener('dragleave', (evt) => ELW(() => {
+        evt.target.classList.remove('drag-entered');
+    }));
+    elem.addEventListener('dragover', (evt) => ELW(() => {
+        evt.preventDefault();
+    }));
+    elem.addEventListener('drop', (evt) => ELW(() => {
+        evt.preventDefault();
+        evt.target.classList.remove('drag-entered');
 
-    if (!dragged_image) {
-      return;
-    }
+        if (!dragged_image) {
+            return;
+        }
 
-    const dragged_image_parent = dragged_image.parentNode;
-    if (dragged_image_parent.tagName.toUpperCase() === 'SPAN' &&
-      dragged_image_parent.classList.contains('item')) {
-      // We were already in a tier
-      const containing_tr = dragged_image_parent.parentNode;
-      containing_tr.removeChild(dragged_image_parent);
-    } else {
-      dragged_image_parent.removeChild(dragged_image);
-    }
-    const td = document.createElement('span');
-    td.classList.add('item');
-    td.appendChild(dragged_image);
-    let items_container = elem.querySelector('.items');
-    if (!items_container) {
-      // Quite lazy hack for <section class='images'>
-      items_container = elem;
-    }
-    items_container.appendChild(td);
+        const dragged_image_parent = dragged_image.parentNode;
+        if (dragged_image_parent.tagName.toUpperCase() === 'SPAN' && dragged_image_parent.classList.contains('item')) {
+            // We were already in a tier
+            const containing_tr = dragged_image_parent.parentNode;
+            containing_tr.removeChild(dragged_image_parent);
+        } else {
+            dragged_image_parent.removeChild(dragged_image);
+        }
+        const td = document.createElement('span');
+        td.classList.add('item');
+        td.appendChild(dragged_image);
+        let items_container = elem.querySelector('.items');
+        if (!items_container) {
+            // Quite lazy hack for <section class='images'>
+            items_container = elem;
+        }
+        items_container.appendChild(td);
 
-    unsaved_changes = true;
-  }));
+        unsaved_changes = true;
+    }));
 }
 
 function enable_edit_on_click (container, input, label) {
-  function change_label (evt) {
-    input.style.display = 'none';
-    label.innerText = input.value;
-    label.style.display = 'inline';
-    unsaved_changes = true;
-  }
+    function change_label (evt) {
+        input.style.display = 'none';
+        label.innerText = input.value;
+        label.style.display = 'inline';
+        unsaved_changes = true;
+    }
 
-  input.addEventListener('change', () => { ELW(change_label.call()); });
-  input.addEventListener('focusout', () => { ELW(change_label.call()); });
+    input.addEventListener('change', () => { ELW(change_label.call()); });
+    input.addEventListener('focusout', () => { ELW(change_label.call()); });
 
-  container.addEventListener('click', (evt) => ELW(() => {
-    label.style.display = 'none';
-    input.value = label.innerText.substr(0, MAX_NAME_LEN);
-    input.style.display = 'inline';
-    input.select();
-  }));
+    container.addEventListener('click', (evt) => ELW(() => {
+        label.style.display = 'none';
+        input.value = label.innerText.substr(0, MAX_NAME_LEN);
+        input.style.display = 'inline';
+        input.select();
+    }));
 }
 
 function bind_title_events () {
-  const title_label = document.querySelector('.title-label');
-  const title_input = document.getElementById('title-input');
-  const title = document.querySelector('.title');
+    const title_label = document.querySelector('.title-label');
+    const title_input = document.getElementById('title-input');
+    const title = document.querySelector('.title');
 
-  enable_edit_on_click(title, title_input, title_label);
+    enable_edit_on_click(title, title_input, title_label);
 }
 
 function create_label_input (row, row_idx, row_name) {
-  const input = document.createElement('input');
-  input.id = `input-tier-${unique_id++}`;
-  input.type = 'text';
-  input.addEventListener('change', () => { ELW(resize_headers.call()); });
-  const label = document.createElement('label');
-  label.htmlFor = input.id;
-  label.innerText = row_name;
+    const input = document.createElement('input');
+    input.id = `input-tier-${unique_id++}`;
+    input.type = 'text';
+    input.addEventListener('change', () => { ELW(resize_headers.call()); });
+    const label = document.createElement('label');
+    label.htmlFor = input.id;
+    label.innerText = row_name;
 
-  const header = row.querySelector('.header');
-  all_headers.splice(row_idx, 0, [header, input, label]);
-  header.appendChild(label);
-  header.appendChild(input);
+    const header = row.querySelector('.header');
+    all_headers.splice(row_idx, 0, [header, input, label]);
+    header.appendChild(label);
+    header.appendChild(input);
 
-  enable_edit_on_click(header, input, label);
+    enable_edit_on_click(header, input, label);
 }
 
 /* eslint-disable no-unused-vars */
 function resize_headers () {
-  let max_width = headers_orig_min_width;
-  for (const [other_header, _i, label] of all_headers) {
-    max_width = Math.max(max_width, label.clientWidth);
-  }
+    let max_width = headers_orig_min_width;
+    for (const [other_header, _i, label] of all_headers) {
+        max_width = Math.max(max_width, label.clientWidth);
+    }
 
-  for (const [other_header, _i2, _l2] of all_headers) {
-    other_header.style.minWidth = `${max_width}px`;
-  }
+    for (const [other_header, _i2, _l2] of all_headers) {
+        other_header.style.minWidth = `${max_width}px`;
+    }
 }
+
 /* eslint-enable no-unused-vars */
 
 function add_row (index, name) {
-  const div = document.createElement('div');
-  const header = document.createElement('span');
-  const items = document.createElement('span');
-  div.classList.add('row');
-  header.classList.add('header');
-  items.classList.add('items');
-  div.appendChild(header);
-  div.appendChild(items);
-  const row_buttons = document.createElement('div');
-  row_buttons.classList.add('row-buttons');
-  const btn_plus_up = document.createElement('input');
-  btn_plus_up.type = 'button';
-  btn_plus_up.value = '+';
-  btn_plus_up.title = 'Add row above';
-  btn_plus_up.addEventListener('click', (evt) => ELW(() => {
-    const parent_div = evt.target.parentNode.parentNode;
-    const rows = Array.from(tierlist_div.children);
-    const idx = rows.indexOf(parent_div);
-    console.assert(idx >= 0);
-    add_row(idx, '');
-    recompute_header_colors();
-  }));
-  const btn_rm = document.createElement('input');
-  btn_rm.type = 'button';
-  btn_rm.value = '-';
-  btn_rm.title = 'Remove row';
-  btn_rm.addEventListener('click', (evt) => ELW(() => {
-    const rows = Array.from(tierlist_div.querySelectorAll('.row'));
-    if (rows.length < 2) return;
-    const parent_div = evt.target.parentNode.parentNode;
-    const idx = rows.indexOf(parent_div);
-    console.assert(idx >= 0);
-    if (rows[idx].querySelectorAll('img').length === 0 ||
-      window.confirm(`Remove tier ${rows[idx].querySelector('.header label').innerText}? (This will move back all its content to the untiered pool)`)) {
-      rm_row(idx);
+    const div = document.createElement('div');
+    const header = document.createElement('span');
+    const items = document.createElement('span');
+    div.classList.add('row');
+    header.classList.add('header');
+    items.classList.add('items');
+    div.appendChild(header);
+    div.appendChild(items);
+    const row_buttons = document.createElement('div');
+    row_buttons.classList.add('row-buttons');
+    const btn_plus_up = document.createElement('input');
+    btn_plus_up.type = 'button';
+    btn_plus_up.value = '+';
+    btn_plus_up.title = 'Add row above';
+    btn_plus_up.addEventListener('click', (evt) => ELW(() => {
+        const parent_div = evt.target.parentNode.parentNode;
+        const rows = Array.from(tierlist_div.children);
+        const idx = rows.indexOf(parent_div);
+        console.assert(idx >= 0);
+        add_row(idx, '');
+        recompute_header_colors();
+    }));
+    const btn_rm = document.createElement('input');
+    btn_rm.type = 'button';
+    btn_rm.value = '-';
+    btn_rm.title = 'Remove row';
+    btn_rm.addEventListener('click', (evt) => ELW(() => {
+        const rows = Array.from(tierlist_div.querySelectorAll('.row'));
+        if (rows.length < 2) return;
+        const parent_div = evt.target.parentNode.parentNode;
+        const idx = rows.indexOf(parent_div);
+        console.assert(idx >= 0);
+        if (rows[idx].querySelectorAll('img').length === 0 || window.confirm(`Remove tier ${rows[idx].querySelector('.header label').innerText}? (This will move back all its content to the untiered pool)`)) {
+            rm_row(idx);
+        }
+        recompute_header_colors();
+    }));
+    const btn_plus_down = document.createElement('input');
+    btn_plus_down.type = 'button';
+    btn_plus_down.value = '+';
+    btn_plus_down.title = 'Add row below';
+    btn_plus_down.addEventListener('click', (evt) => ELW(() => {
+        const parent_div = evt.target.parentNode.parentNode;
+        const rows = Array.from(tierlist_div.children);
+        const idx = rows.indexOf(parent_div);
+        console.assert(idx >= 0);
+        add_row(idx + 1, name);
+        recompute_header_colors();
+    }));
+    row_buttons.appendChild(btn_plus_up);
+    row_buttons.appendChild(btn_rm);
+    row_buttons.appendChild(btn_plus_down);
+    div.appendChild(row_buttons);
+
+    const rows = tierlist_div.children;
+    if (index === rows.length) {
+        tierlist_div.appendChild(div);
+    } else {
+        const nxt_child = rows[index];
+        tierlist_div.insertBefore(div, nxt_child);
     }
-    recompute_header_colors();
-  }));
-  const btn_plus_down = document.createElement('input');
-  btn_plus_down.type = 'button';
-  btn_plus_down.value = '+';
-  btn_plus_down.title = 'Add row below';
-  btn_plus_down.addEventListener('click', (evt) => ELW(() => {
-    const parent_div = evt.target.parentNode.parentNode;
-    const rows = Array.from(tierlist_div.children);
-    const idx = rows.indexOf(parent_div);
-    console.assert(idx >= 0);
-    add_row(idx + 1, name);
-    recompute_header_colors();
-  }));
-  row_buttons.appendChild(btn_plus_up);
-  row_buttons.appendChild(btn_rm);
-  row_buttons.appendChild(btn_plus_down);
-  div.appendChild(row_buttons);
 
-  const rows = tierlist_div.children;
-  if (index === rows.length) {
-    tierlist_div.appendChild(div);
-  } else {
-    const nxt_child = rows[index];
-    tierlist_div.insertBefore(div, nxt_child);
-  }
+    make_accept_drop(div);
+    create_label_input(div, index, name);
 
-  make_accept_drop(div);
-  create_label_input(div, index, name);
-
-  return div;
+    return div;
 }
 
 function rm_row (idx) {
-  const row = tierlist_div.children[idx];
-  reset_row(row);
-  tierlist_div.removeChild(row);
+    const row = tierlist_div.children[idx];
+    reset_row(row);
+    tierlist_div.removeChild(row);
 }
 
 function recompute_header_colors () {
-  tierlist_div.querySelectorAll('.row').forEach((row, row_idx) => {
-    const color = TIER_COLORS[row_idx % TIER_COLORS.length];
-    row.querySelector('.header').style.backgroundColor = color;
-  });
+    tierlist_div.querySelectorAll('.row').forEach((row, row_idx) => {
+        const color = TIER_COLORS[row_idx % TIER_COLORS.length];
+        row.querySelector('.header').style.backgroundColor = color;
+    });
 }
 
 function bind_trash_events () {
-  const trash = document.getElementById('trash');
-  trash.classList.add('droppable');
-  trash.addEventListener('dragenter', (evt) => ELW(() => {
-    evt.preventDefault();
-    evt.target.src = 'trash_bin_open.png';
-  }));
-  trash.addEventListener('dragexit', (evt) => ELW(() => {
-    evt.preventDefault();
-    evt.target.src = 'trash_bin.png';
-  }));
-  trash.addEventListener('dragover', (evt) => ELW(() => {
-    evt.preventDefault();
-  }));
-  trash.addEventListener('drop', (evt) => ELW(() => {
-    evt.preventDefault();
-    evt.target.src = 'trash_bin.png';
-    if (dragged_image) {
-      const dragged_image_parent = dragged_image.parentNode;
-      if (dragged_image_parent.tagName.toUpperCase() === 'SPAN' &&
-        dragged_image_parent.classList.contains('item')) {
-        // We were already in a tier
-        const containing_tr = dragged_image_parent.parentNode;
-        containing_tr.removeChild(dragged_image_parent);
-      }
-      dragged_image.remove();
-    }
-  }));
+    const trash = document.getElementById('trash');
+    trash.classList.add('droppable');
+    trash.addEventListener('dragenter', (evt) => ELW(() => {
+        evt.preventDefault();
+        evt.target.src = 'trash_bin_open.png';
+    }));
+    trash.addEventListener('dragexit', (evt) => ELW(() => {
+        evt.preventDefault();
+        evt.target.src = 'trash_bin.png';
+    }));
+    trash.addEventListener('dragover', (evt) => ELW(() => {
+        evt.preventDefault();
+    }));
+    trash.addEventListener('drop', (evt) => ELW(() => {
+        evt.preventDefault();
+        evt.target.src = 'trash_bin.png';
+        if (dragged_image) {
+            const dragged_image_parent = dragged_image.parentNode;
+            if (dragged_image_parent.tagName.toUpperCase() === 'SPAN' && dragged_image_parent.classList.contains('item')) {
+                // We were already in a tier
+                const containing_tr = dragged_image_parent.parentNode;
+                containing_tr.removeChild(dragged_image_parent);
+            }
+            dragged_image.remove();
+        }
+    }));
 }

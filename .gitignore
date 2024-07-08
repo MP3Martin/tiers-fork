@@ -2,3 +2,4 @@ img/
 images.js
 *.swp
 node_modules/
+.idea/
