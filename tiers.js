@@ -116,6 +116,7 @@ function handleDisableEvents () {
     Array.from(document.getElementsByClassName('row-buttons')).forEach(i => { i.remove(); });
     document.getElementById('trash').remove();
     document.getElementsByClassName('bottom-container')[0].remove();
+    document.getElementById('bottom-hint').remove();
   } catch (e) { }
   document.getElementsByClassName('tierlist')[0].style.width = '96%';
   Array.from(document.querySelectorAll('.item>.draggable')).forEach(i => { i.style.cursor = 'auto'; });
