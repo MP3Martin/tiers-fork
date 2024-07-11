@@ -137,11 +137,13 @@ function handleQueryParameters () {
 
 window.allImagesLoaded = false;
 window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (!window.allImagesLoaded) {
-            Pace.start();
-        }
-    }, 200);
+    if (getQuery('url') !== null) {
+        setTimeout(() => {
+            if (!window.allImagesLoaded) {
+                Pace.start();
+            }
+        }, 200);
+    }
 
     untiered_images = document.querySelector('.images');
     tierlist_div = document.querySelector('.tierlist');
