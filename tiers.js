@@ -292,7 +292,17 @@ function load_tierlist (serialized_tierlist) {
     function createImage (img_src) {
         if (serialized_tierlist.custom?.imageBaseURL != null) {
             try {
-                return create_img_with_src(new URL(img_src, serialized_tierlist.custom.imageBaseURL(serialized_tierlist)).href);
+                let baseURL = serialized_tierlist.custom.imageBaseURL;
+                if (baseURL === 'auto') {
+                    const jsonFileURL = getQuery('url');
+                    if (jsonFileURL === null) {
+                        // noinspection ExceptionCaughtLocallyJS
+                        throw new Error();
+                    }
+                    const tierlistURL = jsonFileURL.substring(0, jsonFileURL.lastIndexOf('/')) + '/';
+                    baseURL = new URL('images', tierlistURL).href;
+                }
+                return create_img_with_src(new URL(img_src, baseURL).href);
             } catch (e) {
                 return create_img_with_src('https://bigrat.monster/media/bigrat.jpg');
             }
