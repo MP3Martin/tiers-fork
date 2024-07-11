@@ -258,6 +258,11 @@ function save_tierlist (filename) {
         title: document.querySelector('.title-label').innerText,
         rows: []
     };
+
+    if (window._custom != null) {
+        serialized_tierlist.custom = window._custom;
+    }
+
     tierlist_div.querySelectorAll('.row').forEach((row, i) => {
         serialized_tierlist.rows.push({
             name: row.querySelector('.header label').innerText.substr(0, MAX_NAME_LEN)
@@ -281,12 +286,27 @@ function save_tierlist (filename) {
 
 function load_tierlist (serialized_tierlist) {
     document.querySelector('.title-label').innerText = serialized_tierlist.title;
+
+    window._custom = serialized_tierlist.custom;
+
+    function createImage (img_src) {
+        if (serialized_tierlist.custom?.baseURL != null) {
+            try {
+                return create_img_with_src(new URL(img_src, serialized_tierlist.custom.baseURL(serialized_tierlist)).href);
+            } catch (e) {
+                return create_img_with_src('https://bigrat.monster/media/bigrat.jpg');
+            }
+        } else {
+            return create_img_with_src(img_src);
+        }
+    }
+
     for (const idx in serialized_tierlist.rows) {
         const ser_row = serialized_tierlist.rows[idx];
         const elem = add_row(idx, ser_row.name);
 
         for (const img_src of ser_row.imgs ?? []) {
-            const img = create_img_with_src(img_src);
+            const img = createImage(img_src);
             const td = document.createElement('span');
             td.classList.add('item');
             td.appendChild(img);
