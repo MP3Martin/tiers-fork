@@ -290,9 +290,9 @@ function load_tierlist (serialized_tierlist) {
     window._custom = serialized_tierlist.custom;
 
     function createImage (img_src) {
-        if (serialized_tierlist.custom?.baseURL != null) {
+        if (serialized_tierlist.custom?.imageBaseURL != null) {
             try {
-                return create_img_with_src(new URL(img_src, serialized_tierlist.custom.baseURL(serialized_tierlist)).href);
+                return create_img_with_src(new URL(img_src, serialized_tierlist.custom.imageBaseURL(serialized_tierlist)).href);
             } catch (e) {
                 return create_img_with_src('https://bigrat.monster/media/bigrat.jpg');
             }
