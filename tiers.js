@@ -300,7 +300,7 @@ function load_tierlist (serialized_tierlist) {
                         throw new Error();
                     }
                     const tierlistURL = jsonFileURL.substring(0, jsonFileURL.lastIndexOf('/')) + '/';
-                    baseURL = new URL('images', tierlistURL).href;
+                    baseURL = new URL('images', tierlistURL).href + '/';
                 }
                 return create_img_with_src(new URL(img_src, baseURL).href);
             } catch (e) {
