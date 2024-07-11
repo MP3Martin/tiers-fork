@@ -1,17 +1,18 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset='utf-8' lang='en' />
   <title>Offline TierMaker</title>
   <link href='tiers.css' rel='stylesheet' />
 
-  <script>window.fetch = undefined;</script>
-  <script src="https://unpkg.com/whatwg-fetch@latest/dist/fetch.umd.js"></script>
-  <script data-pace-options='{ "document": false ,"startOnPageLoad": false, "eventLag": false }'
-          src="https://cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
+  <script>
+      paceOptions = {
+          startOnPageLoad: false
+      };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-barber-shop.css" rel="stylesheet">
-
   <script async src='tiers.js'></script>
 </head>
 

@@ -135,7 +135,14 @@ function handleQueryParameters () {
     }
 }
 
-window.addEventListener('load', () => ELW(() => {
+window.allImagesLoaded = false;
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        if (!window.allImagesLoaded) {
+            Pace.start();
+        }
+    }, 200);
+
     untiered_images = document.querySelector('.images');
     tierlist_div = document.querySelector('.tierlist');
 
@@ -165,7 +172,7 @@ window.addEventListener('load', () => ELW(() => {
     }));
 
     // Allow copy-pasting image from clipboard
-    document.onpaste = (evt) => {
+    document.onpaste = (evt) => ELW(() => {
         const clip_data = evt.clipboardData || evt.originalEvent.clipboardData;
         const items = clip_data.items;
         const images = document.querySelector('.images');
@@ -181,7 +188,7 @@ window.addEventListener('load', () => ELW(() => {
                 reader.readAsDataURL(blob);
             }
         }
-    };
+    });
 
     document.getElementById('reset-list-input').addEventListener('click', () => ELW(() => {
         if (window.confirm('Reset Tierlist? (this will place all images back in the pool)')) {
@@ -229,7 +236,7 @@ window.addEventListener('load', () => ELW(() => {
     }));
 
     handleQueryParameters();
-}));
+});
 
 function create_img_with_src (src) {
     const img = document.createElement('img');
@@ -303,7 +310,7 @@ function load_tierlist (serialized_tierlist) {
                         // noinspection ExceptionCaughtLocallyJS
                         throw new Error();
                     }
-                    const tierlistURL = jsonFileURL.substring(0, jsonFileURL.lastIndexOf('/')) + '/';
+                    const tierlistURL = jsonFileURL.substring(0, jsonFileURL.lastIndexOf('/')) + '/'; // Remove last path part (the json file)
                     baseURL = new URL('images', tierlistURL).href + '/';
                 }
                 return create_img_with_src(new URL(img_src, baseURL).href);
@@ -344,6 +351,12 @@ function load_tierlist (serialized_tierlist) {
 
     unsaved_changes = false;
     handleDisableEvents();
+
+    // Thanks to https://stackoverflow.com/a/60949881
+    Promise.all(Array.from(document.images).filter(img => !img.complete).map(img => new Promise(resolve => { img.onload = img.onerror = resolve; }))).then(() => {
+        window.allImagesLoaded = true;
+        Pace.stop();
+    });
 }
 
 function end_drag (evt) {
@@ -421,6 +434,10 @@ function bind_title_events () {
     const title = document.querySelector('.title');
 
     enable_edit_on_click(title, title_input, title_label);
+
+    if (getQuery('url') !== null) {
+        title_label.innerText = 'Loading...';
+    }
 }
 
 function create_label_input (row, row_idx, row_name) {
