@@ -190,6 +190,10 @@ window.addEventListener('load', () => ELW(() => {
     }));
 
     document.getElementById('export-input').addEventListener('click', () => ELW(() => {
+        if (window._custom != null) {
+            if (!window.confirm('Saving in custom mode is not supported (edit the json file using a text/code editor).\n' +
+                'You can still click Ok to continue, but don\'t expect a correct result.')) return;
+        }
         const name = window.prompt('Please give a name to this tierlist');
         if (name) {
             save_tierlist(`${name}.json`);
